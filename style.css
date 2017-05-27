@@ -4,6 +4,7 @@ body {
 .graph, .history {
 	margin: 0 auto;
 	width: 1236px;
+	position: relative;
 	background: #FAFAFA;
 	border: 2px solid #7f8c8d;
 	box-shadow: 0 0 6px #7f8c8d;
@@ -22,6 +23,15 @@ div.node, div.cloud {
 }
 .node strong {
 	display: block;
+}
+div.node > input {
+  display: none;
+}
+div.node > input + label {
+  position: absolute;
+  z-index: 99;
+  top: 0;
+  left: calc(50% - 10px);
 }
 .icon {
 	display: block;
@@ -173,6 +183,9 @@ div.node, div.cloud {
 	margin: 10px auto;
 	border-collapse: collapse;
 }
+.hide {
+	display: none;
+}
 .history th {
 	background-color: #151515;
 	line-height: 30px;
@@ -194,7 +207,6 @@ div.node, div.cloud {
 .history td strong {
 	font-size: 12px;
 	line-height: 14px;
-	display: block;
 }
 .history td em {
 	font-size: 11px;
@@ -215,30 +227,31 @@ div.node, div.cloud {
 	border-radius: 0;
 }
 .messages {
-	border: 2px solid #ecf0f1;
-	width: 500px;
-	height: 150px;
+	width: 583px;
+	height: 174px;
 	position: absolute;
-	bottom: 90px;
-	left: 100px;
+	bottom: 0;
+	left: 0;
 	font-size: 14px;
 	line-height: 18px;
 	overflow: hidden;
 	background-color: #ecf0f1;
 } 
-.messages .mnro,
-.messages .mprotocol {
-	font-weight: bold;
-	background-color: #7f8c8d;
-	width: 100px;
-	line-height: 40px;
-	text-align: center;
-	color: #ecf0f1;
+.messages .data {
+	width: 83px;
 	float: left;
 } 
+.messages .data span {
+	line-height: 20px;
+	font-weight: bold;
+	background-color: #7f8c8d;
+	text-align: center;
+	color: #ecf0f1;
+	display: block;
+}
 .messages .msource,
 .messages .mdestination {
-	width: 200px;
+	width: 250px;
 	float: left;
 	text-align: center;
 	height: 40px;
@@ -256,11 +269,46 @@ div.node, div.cloud {
 .messages .mdestination {
 	background-color: #c0392b;
 }
-.messages .minfo {
-	padding: 50px 10px 0 10px;
-	height: 110px;
+.messages .info {
+	padding: 40px 0 0 0;
 	line-height: 20px;
 	text-align: center;
 	text-transform: uppercase;
 	box-sizing: border-box;
 } 
+.messages .info span {
+  padding: 10px;
+  display: block;
+}
+.messages .info .mexplanation{
+  border-top: 2px solid #7f8c8d;
+} 
+input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+}
+input[type="checkbox"] + label {
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+}
+input[type="checkbox"] + label:before {
+  content: '';
+  display: inline-block;
+  vertical-align: text-top;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: #34495e;
+}
+input[type="checkbox"]:checked + label:after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border-bottom: 2px solid #fff;
+  border-right: 2px solid #fff;
+  transform: rotate(45deg);
+}

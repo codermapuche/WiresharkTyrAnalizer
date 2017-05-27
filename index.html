@@ -23,11 +23,13 @@
 							<div class="red right">
 								<span class="mask">200.28.0.0 / 16</span>
 								<div class="node right" data-macs="90:2b:34:8d:35:c5">
+                  <input type="checkbox" id="90:2b:34:8d:35:c5" checked><label for="90:2b:34:8d:35:c5"></label>
 									<i class="icon server web"></i>
 									<label><strong>Servidor Web</strong> (<em>Paginas</em>)</label>
 									<span class="host right">.89</span>
 								</div>
 								<div class="node right" data-macs="90:2b:34:6d:5f:f3">
+                  <input type="checkbox" id="90:2b:34:6d:5f:f3" checked><label for="90:2b:34:6d:5f:f3"></label>
 									<i class="icon server web secure"></i>
 									<label><strong>Servidor Web Seguro</strong> (<em>Imagenes</em>)</label>
 									<span class="host right">.90</span>
@@ -35,6 +37,7 @@
 							</div>
 							<div class="red" data-broad="00:e0:7d:f2:93:1a">
 								<div class="node both" data-macs="00:19:66:15:3d:1d-00:08:54:4a:14:20">
+                  <input type="checkbox" id="00:19:66:15:3d:1d-00:08:54:4a:14:20" checked><label for="00:19:66:15:3d:1d-00:08:54:4a:14:20"></label>
 									<i class="icon router"></i>
 									<label><strong>Router A</strong></label>
 									<span class="host left">.100</span>
@@ -57,12 +60,14 @@
 					<div class="red right" data-broad="00:e0:52:c7:65:cc">
 						<span class="mask">210.200.12.64 / 26</span>
 						<div class="node both" data-macs="00:e0:7d:f2:93:1a">
+              <input type="checkbox" id="00:e0:7d:f2:93:1a" checked><label for="00:e0:7d:f2:93:1a"></label>
 							<i class="icon router"></i>
 							<label><strong>Router B</strong></label>
 							<span class="host left">.2</span>
 							<span class="host right">.65</span>
 						</div>
 						<div class="node right" data-macs="">
+              <input type="checkbox" id="" checked><label for=""></label>
 							<i class="icon server dns"></i>
 							<label><strong>Servidor DNS</strong></label>
 							<span class="host right">.100</span>
@@ -71,6 +76,7 @@
 					<div class="red" data-broad="00:26:18:c2:04:78-00:19:66:15:3d:3a-90:2b:34:6d:4d:e6">
 						<div class="red">
 							<div class="node both" data-macs="00:26:18:c2:04:78-00:e0:52:c7:65:cc">
+                <input type="checkbox" id="00:26:18:c2:04:78-00:e0:52:c7:65:cc" checked><label for="00:26:18:c2:04:78-00:e0:52:c7:65:cc"></label>
 								<i class="icon router"></i>
 								<label><strong>Router C</strong></label>
 								<span class="host left">.66</span>
@@ -80,16 +86,19 @@
 						<div class="red left">
 							<span class="mask">10.10.10.0 / 24</span>
 							<div class="node left" data-macs="00:19:66:15:3d:3a">
+                <input type="checkbox" id="00:19:66:15:3d:3a" checked><label for="00:19:66:15:3d:3a"></label>
 								<i class="icon server proxy"></i>
 								<label><strong>Servidor Proxy</strong></label>
 								<span class="host left">.99</span>
 							</div>
 							<div class="node left" data-macs="">
+                <input type="checkbox" id="" checked><label for=""></label>
 								<i class="icon user"></i>
 								<label><strong>Usuario 1</strong></label>
 								<span class="host left">.1</span>
 							</div>
 							<div class="node left" data-macs="90:2b:34:6d:4d:e6">
+                <input type="checkbox" id="90:2b:34:6d:4d:e6" checked><label for="90:2b:34:6d:4d:e6"></label>
 								<i class="icon user"></i>
 								<label><strong>Usuario 2</strong></label>
 								<span class="host left">.2</span>
@@ -99,11 +108,10 @@
 				</div>	
 			</div>		
 			<div class="messages">
-				<div class="mnro"></div>
+				<div class="data"><span class="mnro"></span><span class="mprotocol"></span></div>
 				<div class="msource"></div>
 				<div class="mdestination"></div>
-				<div class="minfo"></div>
-				<div class="mprotocol"></div>
+				<div class="info"><span class="minfo"></span><span class="mexplanation"></span></div>				
 			</div>
 		</div>
 		<table class="history"></table>
@@ -112,7 +120,7 @@
 			var myTyrAnalizer;
 			
 			window.addEventListener("load", function() {
-				myTyrAnalizer = new WiresharkTyrAnalizer("http://localhost/WiresharkTyrAnalizer/123105.txt");
+				myTyrAnalizer = new WiresharkTyrAnalizer("http://localhost/wireshark-analizer/123105.txt");
 				//myTyrAnalizer.renderTable(document.getElementsByClassName("history")[0], {
 				//	"nro" : "Nro",
 				//	"protocol" : "Protocol",
@@ -120,13 +128,15 @@
 				//	"destination" : "Destination",
 				//	"info" : "Info"
 				//});
+        
 				myTyrAnalizer.timelineRender(document.getElementsByClassName("messages")[0], document.getElementsByClassName("history")[0], {
 					"nro" : "Nro",
 					"protocol" : "Protocolo",
 					"source" : "Origen",
 					"destination" : "Destino",
 					"info" : "Info"
-				});
+				}, 
+        document.querySelectorAll('.node > input[type="checkbox"]'));
 			});
 		</script>
 	</body>
