@@ -1,43 +1,42 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Capture</title>
-
+		<title>TyrAnalizer Capture</title>
+    
 		<meta charset="UTF-8">
-		<meta name="application-name" content="Estudio Juridico">
-		<meta name="author" content="NSD">
-		<meta name="generator" content="Swift">
-		<meta name="robots" content="noindex, nofollow">
-
-		<link rel="stylesheet" href="style.css">
-		<script src="script.js"></script>
+		<meta name="application-name" content="TyrAnalizer">
+		<meta name="author" content="Nehuen Prados">
+    
+		<link rel="stylesheet" href="tyr-analizer.css">
+    
+		<script src="tyr-analizer.js"></script>
 	</head>
 
 	<body>
-		<div class="graph">
-			<div class="red main block">
-				<div class="red">
-					<h2>ISP</h2>
-					<div class="red">
-						<div class="red" data-broad="90:2b:34:8d:35:c5-90:2b:34:6d:5f:f3-00:19:66:15:3d:1d">
-							<div class="red right">
+		<div class="graph" id="graph">
+			<div class="network main block">
+				<div class="network">
+					<h2>HOSTING</h2>
+					<div class="network">
+						<div class="network" data-broad="200.28.0.89-200.28.0.90-200.28.0.100">
+							<div class="network right">
 								<span class="mask">200.28.0.0 / 16</span>
-								<div class="node right" data-macs="90:2b:34:8d:35:c5">
-                  <input type="checkbox" id="90:2b:34:8d:35:c5" checked><label for="90:2b:34:8d:35:c5"></label>
+								<div class="node right" data-ip="200.28.0.89">
+                  <input type="checkbox" id="weserver" checked><label for="weserver"></label>
 									<i class="icon server web"></i>
-									<label><strong>Servidor Web</strong> (<em>Paginas</em>)</label>
+									<label><strong>Servidor Web</strong></label>
 									<span class="host right">.89</span>
 								</div>
-								<div class="node right" data-macs="90:2b:34:6d:5f:f3">
-                  <input type="checkbox" id="90:2b:34:6d:5f:f3" checked><label for="90:2b:34:6d:5f:f3"></label>
+								<div class="node right" data-ip="200.28.0.90">
+                  <input type="checkbox" id="weserver-secure" checked><label for="weserver-secure"></label>
 									<i class="icon server web secure"></i>
-									<label><strong>Servidor Web Seguro</strong> (<em>Imagenes</em>)</label>
+									<label><strong>Servidor Web Seguro</strong></label>
 									<span class="host right">.90</span>
 								</div>
 							</div>
-							<div class="red" data-broad="00:e0:7d:f2:93:1a">
-								<div class="node both" data-macs="00:19:66:15:3d:1d-00:08:54:4a:14:20">
-                  <input type="checkbox" id="00:19:66:15:3d:1d-00:08:54:4a:14:20" checked><label for="00:19:66:15:3d:1d-00:08:54:4a:14:20"></label>
+							<div class="network">
+								<div class="node both" data-ip="200.28.0.100-147.12.3.1" data-broad="147.12.3.2-147.12.3.3">
+                  <input type="checkbox" id="router-a" checked><label for="router-a"></label>
 									<i class="icon router"></i>
 									<label><strong>Router A</strong></label>
 									<span class="host left">.100</span>
@@ -46,98 +45,85 @@
 							</div>
 						</div>
 					</div>
-					<div class="red" data-broad="00:08:54:4a:14:20-00:e0:7d:f2:93:1a">
-						<div class="red">
-							<div class="cloud both">
-								<i class="icon cloud"></i>
-								<label><strong>147.12.3.0 / 30</strong></label>
-							</div>
-						</div>
-					</div>
 				</div>
-				<div class="red delimited">
+        <div class="network">
+          <h2>ISP</h2>
+          <div class="network">
+            <div class="cloud both bottom">
+              <i class="icon cloud"></i>
+              <label><strong>147.12.3.0 / 30</strong></label>
+            </div>
+            <div class="network" data-broad="200.18.10.1-200.18.10.2">
+              <div class="node bottom top" data-ip="200.18.10.2-147.12.3.3" data-broad="147.12.3.1-147.12.3.2">
+                <input type="checkbox" id="router-b" checked><label for="router-b"></label>
+                <i class="icon router"></i>
+                <label><strong>Router B</strong></label>
+                <span class="host top">.3</span>
+                <span class="host bottom">.2</span>
+              </div>
+              <div class="node top" data-ip="200.18.10.1">
+                <input type="checkbox" id="dnsserver" checked><label for="dnsserver"></label>
+                <i class="icon server dns"></i>
+                <label><strong>Servidor DNS</strong></label>
+                <span class="host top">.1</span>
+              </div>
+            </div>
+          </div>
+        </div>
+				<div class="network delimited">
 					<h2>Organizacion X</h2>
-					<div class="red right" data-broad="00:e0:52:c7:65:cc">
-						<span class="mask">210.200.12.64 / 26</span>
-						<div class="node both" data-macs="00:e0:7d:f2:93:1a">
-              <input type="checkbox" id="00:e0:7d:f2:93:1a" checked><label for="00:e0:7d:f2:93:1a"></label>
-							<i class="icon router"></i>
-							<label><strong>Router B</strong></label>
-							<span class="host left">.2</span>
-							<span class="host right">.65</span>
-						</div>
-						<div class="node right" data-macs="">
-              <input type="checkbox" id="" checked><label for=""></label>
-							<i class="icon server dns"></i>
-							<label><strong>Servidor DNS</strong></label>
-							<span class="host right">.100</span>
-						</div>
-					</div>
-					<div class="red" data-broad="00:26:18:c2:04:78-00:19:66:15:3d:3a-90:2b:34:6d:4d:e6">
-						<div class="red">
-							<div class="node both" data-macs="00:26:18:c2:04:78-00:e0:52:c7:65:cc">
-                <input type="checkbox" id="00:26:18:c2:04:78-00:e0:52:c7:65:cc" checked><label for="00:26:18:c2:04:78-00:e0:52:c7:65:cc"></label>
+					<div class="network">
+						<div class="network" data-broad="192.168.1.100-192.168.1.66">
+							<div class="node both bottom" data-ip="192.168.1.66-10.10.10.100-147.12.3.2" data-broad="147.12.3.1-147.12.3.3-10.10.10.1-10.10.10.2">
+                <input type="checkbox" id="router-c" checked><label for="router-c"></label>
 								<i class="icon router"></i>
 								<label><strong>Router C</strong></label>
-								<span class="host left">.66</span>
+								<span class="host left">.2</span>
 								<span class="host right">.100</span>
+								<span class="host bottom">.100</span>
 							</div>
-						</div>
-						<div class="red left">
-							<span class="mask">10.10.10.0 / 24</span>
-							<div class="node left" data-macs="00:19:66:15:3d:3a">
-                <input type="checkbox" id="00:19:66:15:3d:3a" checked><label for="00:19:66:15:3d:3a"></label>
+							<div class="node top" data-ip="192.168.1.100">
+                <input type="checkbox" id="proxy" checked><label for="proxy"></label>
 								<i class="icon server proxy"></i>
 								<label><strong>Servidor Proxy</strong></label>
-								<span class="host left">.99</span>
+								<span class="host top">.100</span>
 							</div>
-							<div class="node left" data-macs="">
-                <input type="checkbox" id="" checked><label for=""></label>
+						</div>
+						<div class="network left" data-broad="10.10.10.1-10.10.10.2">
+							<span class="mask">10.10.10.0 / 24</span>
+							<div class="node left" data-ip="10.10.10.1">
+                <input type="checkbox" id="user-1" checked><label for="user-1"></label>
 								<i class="icon user"></i>
 								<label><strong>Usuario 1</strong></label>
 								<span class="host left">.1</span>
 							</div>
-							<div class="node left" data-macs="90:2b:34:6d:4d:e6">
-                <input type="checkbox" id="90:2b:34:6d:4d:e6" checked><label for="90:2b:34:6d:4d:e6"></label>
+							<div class="node left" data-ip="10.10.10.2">
+                <input type="checkbox" id="user-2" checked><label for="user-2"></label>
 								<i class="icon user"></i>
 								<label><strong>Usuario 2</strong></label>
 								<span class="host left">.2</span>
-							</div>	
+							</div>
 						</div>
-					</div>	
-				</div>	
-			</div>		
-			<div class="messages">
-				<div class="data"><span class="mnro"></span><span class="mprotocol"></span></div>
+					</div>
+				</div>
+			</div>
+			<div class="messages source" id="messages-source">
 				<div class="msource"></div>
+				<div class="info"><span class="minfo"></span><span class="mexplanation"></span></div>
+			</div><div class="messages target" id="messages-target">
 				<div class="mdestination"></div>
-				<div class="info"><span class="minfo"></span><span class="mexplanation"></span></div>				
+				<div class="info"><span class="minfo"></span><span class="mexplanation"></span></div>
 			</div>
 		</div>
-		<table class="history"></table>
+		<table class="history" id="history"></table>
 		<script>
-			/*/ Global variable to store my tyr wireshark capture analizer /*/
-			var myTyrAnalizer;
-			
-			window.addEventListener("load", function() {
-				myTyrAnalizer = new WiresharkTyrAnalizer("123105.txt");
-				//myTyrAnalizer.renderTable(document.getElementsByClassName("history")[0], {
-				//	"nro" : "Nro",
-				//	"protocol" : "Protocol",
-				//	"source" : "Source",
-				//	"destination" : "Destination",
-				//	"info" : "Info"
-				//});
-        
-				myTyrAnalizer.timelineRender(document.getElementsByClassName("messages")[0], document.getElementsByClassName("history")[0], {
-					"nro" : "Nro",
-					"protocol" : "Protocolo",
-					"source" : "Origen",
-					"destination" : "Destino",
-					"info" : "Info"
-				}, 
-        document.querySelectorAll('.node > input[type="checkbox"]'));
-			});
+			var analizer = new TyrAnalizer("123105.json", {
+            sourcemsg: document.getElementById("messages-source"),
+            targetmsg: document.getElementById("messages-target"),
+            graph: document.getElementById("graph"),
+            history: document.getElementById("history"),
+            filters: document.querySelectorAll('.node > input[type="checkbox"]')
+          });
 		</script>
 	</body>
 </html>
