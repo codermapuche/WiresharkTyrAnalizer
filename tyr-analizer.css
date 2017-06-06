@@ -1,7 +1,7 @@
 body {
 	font-family: arial;
 }
-.graph, .history, .config {
+.graph, table, .config {
 	margin: 0 auto;
 	position: relative;
 	background: #FAFAFA;
@@ -242,9 +242,12 @@ h2 {
 	bottom: -20px;
 }
 
-.history, .config {
+table, .config {
 	margin: 10px auto;
 	border-collapse: collapse;
+}
+.protocols td {
+	vertical-align: top;
 }
 .hide {
 	display: none;
@@ -259,7 +262,7 @@ h2 {
 .history tr > :nth-child(4) {
   width: 200px;
 }
-.history th {
+table th {
 	background-color: #151515;
 	line-height: 30px;
 	color: #fff;
@@ -270,7 +273,7 @@ h2 {
 iframe {
 	border: none;
 }
-.history td {
+table td {
 	background-color: #fff;
 	color: #151515;
 	text-transform: uppercase;
@@ -280,29 +283,29 @@ iframe {
 	font-size: .8rem;
 	line-height: 1.6em;
 }
-.history td em {
+table td em {
 	font-style: normal;
 	font-weight: 600;
 }
-.history td em,
-.history td strong {
+table td em,
+table td strong {
 	font-size: 1em;
 }
-.history td strong {
+table td strong {
   background-color: #fafafa;
   margin: 0 .5em;
   padding: 1em;
   min-width: 150px;
   display: inline-block;
 }
-.history td strong span {
+table td strong span {
   padding: 0 .5em;
   margin-left: .5em;
   background-color: #2c3e50;
   display: inline-block;
   color: #ecf0f1;
 }
-.history td i {
+table td i {
 	width: 3em;
 	height: 3em;
 }
@@ -384,8 +387,12 @@ input[type="checkbox"] + label {
   position: relative;
   cursor: pointer;
   padding: 0;
+  line-height: 22px;
+  vertical-align: middle;
+  display: block;
+  margin: .5em 0;
+  width: 100%;
 }
-input[type="radio"] + label:before,
 input[type="checkbox"] + label:before {
   content: '';
   line-height: 22px;
@@ -397,6 +404,9 @@ input[type="checkbox"] + label:before {
   background: #eee;
   color: #34495e;
   cursor: pointer;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 input[type="checkbox"] + label:after {
   content: '';

@@ -10,6 +10,7 @@ const TyrAnalizer = (function(window, undefined) {
   function TyrAnalizer(capture, options) {
     const analizer = this;
 
+    analizer.protocols = options.protocols;
     analizer.history = options.history;
     analizer.graph = options.graph;
 
@@ -66,6 +67,28 @@ const TyrAnalizer = (function(window, undefined) {
 
     // Init table history with headers.
     analizer.history.innerHTML = "<thead><tr><th>#</th><th>Protocolo</th><th>Origen</th><th>Destino</th><th>Mensaje</th></tr></thead>";
+    analizer.protocols.innerHTML = "<thead>" + 
+                                      "<tr>" + 
+                                        "<th>Capa 1<br><strong>Fisica</strong></th>" + 
+                                        "<th>Capa 2<br><strong>Enlace</strong></th>" + 
+                                        "<th>Capa 3<br><strong>Red</strong></th>" + 
+                                        "<th>Capa 4<br><strong>Transporte</strong></th>" + 
+                                        "<th>Capa 5<br><strong>Sesion</strong></th>" + 
+                                        "<th>Capa 6<br><strong>Presentacion</strong></th>" + 
+                                        "<th>Capa 7<br><strong>Aplicacion</strong></th>" + 
+                                      "</tr>" + 
+                                    "</thead>" + 
+                                    "<tbody>" + 
+                                      "<tr>" + 
+                                        "<td></td>" + 
+                                        "<td></td>" + 
+                                        "<td></td>" + 
+                                        "<td></td>" + 
+                                        "<td></td>" + 
+                                        "<td></td>" + 
+                                        "<td></td>" + 
+                                      "</tr>" + 
+                                    "</tbody>";
 
     // Parse raw data.
     analizer.capture.traffic = TyrAnalizer.parseTraffic(analizer.capture.data.map(TyrAnalizer.parsePacket));
@@ -123,6 +146,47 @@ const TyrAnalizer = (function(window, undefined) {
       });
     }
 
+    // Populate protocol table.
+    analizer.capture.traffic.reduce(function(index, packet) {
+      var stack = packet.protocol.split(":");
+      
+      for (var nro=0; nro<stack.length; nro++) {
+        if (index[stack[nro]]) {
+          continue;
+        }
+        
+        switch (stack[nro]) {
+          case "arp":
+            analizer.protocols.querySelector("tbody td:nth-child(2)")
+                    .innerHTML += '<input type="checkbox" id="protocol-' + stack[nro] + '" checked><label for="protocol-' + stack[nro] + '">' + stack[nro] + '</label>';
+            index[stack[nro]] = true;
+            break;
+          case "ip":
+            analizer.protocols.querySelector("tbody td:nth-child(3)")
+                    .innerHTML += '<input type="checkbox" id="protocol-' + stack[nro] + '" checked><label for="protocol-' + stack[nro] + '">' + stack[nro] + '</label>';
+            index[stack[nro]] = true;
+            break;
+          case "udp":
+          case "tcp":
+            analizer.protocols.querySelector("tbody td:nth-child(4)")
+                    .innerHTML += '<input type="checkbox" id="protocol-' + stack[nro] + '" checked><label for="protocol-' + stack[nro] + '">' + stack[nro] + '</label>';
+            index[stack[nro]] = true;
+            break;
+          case "http":
+          case "dns":
+          case "ssl":
+            analizer.protocols.querySelector("tbody td:nth-child(7)")
+                    .innerHTML += '<input type="checkbox" id="protocol-' + stack[nro] + '" checked><label for="protocol-' + stack[nro] + '">' + stack[nro] + '</label>';
+            index[stack[nro]] = true;
+            break;
+          default:
+            console.log(stack[nro]);
+            break;
+        }
+      }      
+      
+      return index;
+    }, {});
 
     // Populate history table.
     analizer.history.innerHTML += "<tbody><tr>" +

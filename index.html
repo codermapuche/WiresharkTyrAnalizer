@@ -115,6 +115,7 @@
 				<div class="info"><span class="minfo"></span><span class="mexplanation"></span></div>
 			</div>
 		</div>
+		<table class="protocols" id="protocols"></table>
 		<table class="history" id="history"></table>
 		<script>
 			var analizer = new TyrAnalizer("123105.json", {
@@ -122,6 +123,7 @@
             targetmsg: document.getElementById("messages-target"),
             graph: document.getElementById("graph"),
             history: document.getElementById("history"),
+            protocols: document.getElementById("protocols"),
             filters: document.querySelectorAll('.node > input[type="checkbox"]')
           });
 		</script>
