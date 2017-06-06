@@ -67,27 +67,27 @@ const TyrAnalizer = (function(window, undefined) {
 
     // Init table history with headers.
     analizer.history.innerHTML = "<thead><tr><th>#</th><th>Protocolo</th><th>Origen</th><th>Destino</th><th>Mensaje</th></tr></thead>";
-    analizer.protocols.innerHTML = "<thead>" + 
-                                      "<tr>" + 
-                                        "<th>Capa 1<br><strong>Fisica</strong></th>" + 
-                                        "<th>Capa 2<br><strong>Enlace</strong></th>" + 
-                                        "<th>Capa 3<br><strong>Red</strong></th>" + 
-                                        "<th>Capa 4<br><strong>Transporte</strong></th>" + 
-                                        "<th>Capa 5<br><strong>Sesion</strong></th>" + 
-                                        "<th>Capa 6<br><strong>Presentacion</strong></th>" + 
-                                        "<th>Capa 7<br><strong>Aplicacion</strong></th>" + 
-                                      "</tr>" + 
-                                    "</thead>" + 
-                                    "<tbody>" + 
-                                      "<tr>" + 
-                                        "<td></td>" + 
-                                        "<td></td>" + 
-                                        "<td></td>" + 
-                                        "<td></td>" + 
-                                        "<td></td>" + 
-                                        "<td></td>" + 
-                                        "<td></td>" + 
-                                      "</tr>" + 
+    analizer.protocols.innerHTML = "<thead>" +
+                                      "<tr>" +
+                                        "<th>Capa 1<br><strong>Fisica</strong></th>" +
+                                        "<th>Capa 2<br><strong>Enlace</strong></th>" +
+                                        "<th>Capa 3<br><strong>Red</strong></th>" +
+                                        "<th>Capa 4<br><strong>Transporte</strong></th>" +
+                                        "<th>Capa 5<br><strong>Sesion</strong></th>" +
+                                        "<th>Capa 6<br><strong>Presentacion</strong></th>" +
+                                        "<th>Capa 7<br><strong>Aplicacion</strong></th>" +
+                                      "</tr>" +
+                                    "</thead>" +
+                                    "<tbody>" +
+                                      "<tr>" +
+                                        "<td></td>" +
+                                        "<td></td>" +
+                                        "<td></td>" +
+                                        "<td></td>" +
+                                        "<td></td>" +
+                                        "<td></td>" +
+                                        "<td></td>" +
+                                      "</tr>" +
                                     "</tbody>";
 
     // Parse raw data.
@@ -125,6 +125,7 @@ const TyrAnalizer = (function(window, undefined) {
     // Index interfaces
     for (var nro=nodes.length-1; nro >= 0; nro--) {
       var node = {
+        id:    nodes[nro].querySelector("input").id,
         name:  nodes[nro].querySelector("label strong").innerHTML,
         icon:  nodes[nro].querySelector("i").className,
         ips:   nodes[nro].dataset.ip.split("-"),
@@ -149,12 +150,12 @@ const TyrAnalizer = (function(window, undefined) {
     // Populate protocol table.
     analizer.capture.traffic.reduce(function(index, packet) {
       var stack = packet.protocol.split(":");
-      
+
       for (var nro=0; nro<stack.length; nro++) {
         if (index[stack[nro]]) {
           continue;
         }
-        
+
         switch (stack[nro]) {
           case "arp":
             analizer.protocols.querySelector("tbody td:nth-child(2)")
@@ -183,8 +184,8 @@ const TyrAnalizer = (function(window, undefined) {
             console.log(stack[nro]);
             break;
         }
-      }      
-      
+      }
+
       return index;
     }, {});
 
@@ -204,17 +205,88 @@ const TyrAnalizer = (function(window, undefined) {
                                   })
                                   .join("</tr><tr>") +
                                   "</tr></tbody>";
+
+    // Filter history:
+    function updateFilters() {
+      var protocols = analizer.protocols.querySelectorAll("input[type='checkbox']"),
+          nodes = analizer.graph.querySelectorAll(".node input[type='checkbox']"),
+          history = analizer.history.querySelectorAll("tbody > tr"),
+          filter = {
+            protocols: {},
+            nodes: {}
+          };
+
+      for (var nro=protocols.length-1; nro>=0; nro--) {
+        if (protocols[nro].checked) {
+          filter.protocols[protocols[nro].id.replace("protocol-", "")] = true;
+        }
+      }
+
+      for (var nro=nodes.length-1; nro>=0; nro--) {
+        if (nodes[nro].checked) {
+          filter.nodes[nodes[nro].id] = true;
+        }
+      }
+
+      for (var nro=analizer.capture.traffic.length-1; nro>=0; nro--) {
+        var packet = analizer.capture.traffic[nro],
+            protocol = packet.protocol.lastIndexOf(":") !== -1 ? packet.protocol.substr(packet.protocol.lastIndexOf(":") + 1) : packet.protocol;
+
+        if (filter.protocols[protocol] && // Has a valid protocol
+            (
+              // Has a valid sender node
+              filter.nodes[analizer.topologyTable.interfaces[packet.sourceMac].id] ||
+              // Has a valid target node
+              (packet.targetMac !== "ff:ff:ff:ff:ff:ff" && filter.nodes[analizer.topologyTable.interfaces[packet.targetMac].id]) ||
+              // Has a target node of broadcast
+              (packet.targetMac === "ff:ff:ff:ff:ff:ff" && (function(){
+                  for (var mac in analizer.topologyTable.interfaces) {
+                    var iFace = analizer.topologyTable.interfaces[mac];
+                    if (!filter.nodes[iFace.id]) {
+                      continue;
+                    }
+                    
+                    if (iFace.broad.map(function(ip) { return analizer.topologyTable.indexIp[ip]; }).indexOf(packet.sourceMac) !== -1) {
+                      return true;
+                    }                  
+                  }
+                  
+                  return false;                  
+                })()
+              )
+            )
+           ) {
+          history[nro].classList.remove("hide");
+        } else {
+          history[nro].classList.add("hide");
+        }
+      }
+    }
+
+    // Add filter behavior to protocol table:
+    var filters = analizer.protocols.querySelectorAll("input[type='checkbox']");
+    for (var nro=filters.length-1; nro>=0; nro--) {
+      filters[nro].addEventListener("change", updateFilters);
+    }
+
+    // Add filter behavior to nodes graph:
+    filters = analizer.graph.querySelectorAll(".node input[type='checkbox']");
+    for (var nro=filters.length-1; nro>=0; nro--) {
+      filters[nro].addEventListener("change", updateFilters);
+    }
+
+    updateFilters();
   }
 
   /*/ Parse individual packet. /*/
   TyrAnalizer.parsePacket = function parsePacket(packet) {
     var info = {};
     info.protocol = packet._source.layers.frame["frame.protocols"];
-    
+
     if (info.protocol.indexOf("http:data-text-lines") !== -1) {
       info.protocol = info.protocol.replace("http:data-text-lines", "http");
-    }      
-    
+    }
+
     if (packet._source.layers.eth) {
       // It has Ethernet info
       info.sourceMac = packet._source.layers.eth["eth.src"];
@@ -268,7 +340,7 @@ const TyrAnalizer = (function(window, undefined) {
       if (info.message.indexOf("GET ") === 0) {
         info.url = info.message.split(" ")[1];
       } else if (info.message.indexOf("HTTP") === 0) {
-        if (info.message.split(" ")[1] === "200") {   
+        if (info.message.split(" ")[1] === "200") {
           info.data = packet._source.layers.http["http.file_data"];
         }
       }
@@ -277,23 +349,23 @@ const TyrAnalizer = (function(window, undefined) {
     if (packet._source.layers.dns) {
       // It has DNS info
       if (packet._source.layers.dns["dns.count.queries"] !== "0") {
-        info.query = Object.keys(packet._source.layers.dns.Queries)[0];        
+        info.query = Object.keys(packet._source.layers.dns.Queries)[0];
       }
-      
+
       if (packet._source.layers.dns["dns.count.answers"] !== "0") {
-        info.answer = Object.keys(packet._source.layers.dns.Answers)[0];        
+        info.answer = Object.keys(packet._source.layers.dns.Answers)[0];
       }
-      
+
       if (packet._source.layers.dns["dns.count.auth_rr"] !== "0") {
-        info.aNameservers = Object.keys(packet._source.layers.dns["Authoritative nameservers"])[0];        
+        info.aNameservers = Object.keys(packet._source.layers.dns["Authoritative nameservers"])[0];
       }
-      
+
       if (packet._source.layers.dns["dns.count.add_rr"] !== "0") {
-        info.aRecords = Object.keys(packet._source.layers.dns["Additional records"])[0];        
+        info.aRecords = Object.keys(packet._source.layers.dns["Additional records"])[0];
       }
-      
+
     }
-    
+
     return info;
   }
 
@@ -383,13 +455,13 @@ const TyrAnalizer = (function(window, undefined) {
               message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> contesta:<br>Si dale.";
             }
             break;
-          case "http": 
+          case "http":
             if (packet.message.indexOf("GET ") === 0) {
               message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pide el recurso:<br><strong><span>" + packet.url + "</span></strong>";
             } else if (packet.data) {
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia el recurso:<br>" + 
-                        "<iframe sandbox srcdoc=\"" + 
-                        packet.data        
+              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia el recurso:<br>" +
+                        "<iframe sandbox srcdoc=\"" +
+                        packet.data
                           .replace(/img src\=\"/gi, 'img data-src="')
                           .replace(/&/g, '&amp;')
                           .replace(/>/g, '&gt;')
@@ -401,20 +473,20 @@ const TyrAnalizer = (function(window, undefined) {
               console.log(packet)
             }
             break;
-          case "dns": 
-            if (packet.answer || packet.aNameservers || packet.aRecords) {   
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> le responde a <em>" + topology.interfaces[packet.targetMac].name  + "</em> la pregunta:<br><strong><span>" + packet.query + "</span></strong>";    
+          case "dns":
+            if (packet.answer || packet.aNameservers || packet.aRecords) {
+              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> contesta a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:";
               if (packet.answer) {
                 message += "<br>La respuesta es:<br><strong><span>" + packet.answer + "</span></strong>";
-              }        
+              }
               if (packet.aNameservers) {
                 message += "<br>Los servidores de nombres con autoridad:<br><strong><span>" + packet.aNameservers + "</span></strong>";
-              }        
+              }
               if (packet.aRecords) {
-                message += "<br>Los registros adicionales:<br><strong><span>" + packet.aRecords + "</span></strong>";                
-              }        
+                message += "<br>Los registros adicionales:<br><strong><span>" + packet.aRecords + "</span></strong>";
+              }
             } else {
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pregunta por:<br><strong><span>" + packet.query + "</span></strong>";             
+              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pregunta por:<br><strong><span>" + packet.query + "</span></strong>";
             }
             break;
         }

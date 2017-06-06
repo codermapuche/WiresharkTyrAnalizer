@@ -43,7 +43,7 @@ div.node > input {
 div.node > input + label {
   position: absolute;
   z-index: 99;
-  top: -2px;
+  top: calc(-.5em - 2px);
   left: -2px;
 }
 div.node > input.config + label {
@@ -256,7 +256,7 @@ table, .config {
   width: 50px;
 }
 .history tr > :nth-child(2) {
-  width: 100px;
+  width: 150px;
 }
 .history tr > :nth-child(3),
 .history tr > :nth-child(4) {
