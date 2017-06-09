@@ -516,12 +516,12 @@ const TyrAnalizer = (function(window, undefined) {
                         totalPercent += percent;
                         totalSize += packet.overhead[protocol];
                         
-                        return "<span class=\"" + protocol + "\">" + protocol + " <br><span>" + packet.overhead[protocol] + "B (" + percent + "%)</span></span>";
+                        return "<span class=\"" + protocol + "\">" + protocol + "<br><span>" + packet.overhead[protocol] + "B<br>(" + percent + "%)</span></span>";
                       })
                       .join("");
         
         message +=  "<div class=\"overhead\">" +
-                      "<strong>Overhead of "+totalSize+"B ("+totalPercent+"%) in packet of " + packet.size + "B:</strong>" +
+                      "<strong>Overhead de "+totalSize+"B ("+totalPercent+"%) en paquete de " + packet.size + "B:</strong>" +
                       "<div>" + details + "</div>" +
                     "</div>";
         
