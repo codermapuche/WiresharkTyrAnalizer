@@ -427,3 +427,44 @@ input[type="checkbox"]:checked + label:before {
   background-color: #34495e;	
   color: #eee;
 }
+.overhead {
+  font-size: .75em;
+  margin-top: 2em;
+  background-color: #ecf0f1;
+}
+.overhead > strong {
+  background-color: #ecf0f1;
+  border-bottom: .1em solid #bdc3c7;
+  width: calc(100% - 2em);
+  margin: 0;
+}
+.overhead > div {
+  padding: 1em;
+  display: flex;
+}
+.overhead > div > span {
+	color: #ecf0f1;
+	padding: 0 1em;
+	flex: 1;
+}
+.overhead > div > span.eth {
+	background-color: #16a085;
+}
+.overhead > div > span.ip {
+	background-color: #27ae60;
+}
+.overhead > div > span.tcp {
+	background-color: #2980b9;
+}
+.overhead > div > span.udp {
+	background-color: #8e44ad;
+}
+.overhead > div > span.arp {
+	background-color: #f39c12;
+}
+.overhead > div > span.dns {
+	background-color: #d35400;
+}
+.overhead > div > span.http {
+	background-color: #2c3e50;
+}

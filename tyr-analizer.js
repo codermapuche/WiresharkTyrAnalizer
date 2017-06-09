@@ -282,21 +282,33 @@ const TyrAnalizer = (function(window, undefined) {
   TyrAnalizer.parsePacket = function parsePacket(packet) {
     var info = {};
     info.protocol = packet._source.layers.frame["frame.protocols"];
+    info.size = packet._source.layers.frame["frame.len"];
+    info.overhead = {};
 
+    // Protocol alias
     if (info.protocol.indexOf("http:data-text-lines") !== -1) {
       info.protocol = info.protocol.replace("http:data-text-lines", "http");
     }
+    
+    if (info.protocol.indexOf("eth:ethertype") !== -1) {
+      info.protocol = info.protocol.replace("eth:ethertype", "eth");
+    }
 
+    // Copy of protocol stack
+    info.protocolsStack = info.protocol;
+    
     if (packet._source.layers.eth) {
       // It has Ethernet info
       info.sourceMac = packet._source.layers.eth["eth.src"];
       info.targetMac = packet._source.layers.eth["eth.dst"];
+      info.overhead.eth = 14; // Header length in bytes
     }
 
     if (packet._source.layers.ip) {
       // It has IP info
       info.sourceIp = packet._source.layers.ip["ip.src"];
       info.targetIp = packet._source.layers.ip["ip.dst"];
+      info.overhead.ip = 20; // Header length in bytes
     }
 
     if (packet._source.layers.tcp) {
@@ -310,13 +322,16 @@ const TyrAnalizer = (function(window, undefined) {
         ack: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.ack"] === "1",
         fin: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.fin"] === "1"
       };
-
+      
+      info.overhead.tcp = 20; // Header length in bytes
     }
 
     if (packet._source.layers.udp) {
       // It has UDP info
       info.sourcePort = packet._source.layers.udp["udp.srcport"];
       info.targetPort = packet._source.layers.udp["udp.dstport"];
+      
+      info.overhead.udp = 16; // Header length in bytes
     }
 
     if (packet._source.layers.arp) {
@@ -491,6 +506,25 @@ const TyrAnalizer = (function(window, undefined) {
             break;
         }
 
+        var totalPercent = 0,
+            totalSize = 0,
+            details = packet.protocolsStack.split(":").map(function(protocol) {
+                        packet.overhead[protocol] || (packet.overhead[protocol] = 0);
+                        packet.overhead[protocol] = Number(packet.overhead[protocol]);
+                        
+                        var percent = Math.round(packet.overhead[protocol] / packet.size * 10) / 10;
+                        totalPercent += percent;
+                        totalSize += packet.overhead[protocol];
+                        
+                        return "<span class=\"" + protocol + "\">" + protocol + " <br><span>" + packet.overhead[protocol] + "B (" + percent + "%)</span></span>";
+                      })
+                      .join("");
+        
+        message +=  "<div class=\"overhead\">" +
+                      "<strong>Overhead of "+totalSize+"B ("+totalPercent+"%) in packet of " + packet.size + "B:</strong>" +
+                      "<div>" + details + "</div>" +
+                    "</div>";
+        
         return message;
         break;
       default:
