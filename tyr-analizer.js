@@ -66,7 +66,7 @@ const TyrAnalizer = (function(window, undefined) {
     const analizer = this;
 
     // Init table history with headers.
-    analizer.history.innerHTML = "<thead><tr><th>#</th><th>Protocolo</th><th>Origen</th><th>Destino</th><th>Mensaje</th></tr></thead>";
+    analizer.history.innerHTML = '<thead><tr><th><input type="checkbox" id="autoplay" checked><label for="autoplay">#</label></th><th>Protocolo</th><th>Origen</th><th>Destino</th><th>Mensaje</th></tr></thead>';
     analizer.protocols.innerHTML = "<thead>" +
                                       "<tr>" +
                                         "<th>Capa 1<br><strong>Fisica</strong></th>" +
@@ -128,8 +128,8 @@ const TyrAnalizer = (function(window, undefined) {
         id:    nodes[nro].querySelector("input").id,
         name:  nodes[nro].querySelector("label strong").innerHTML,
         icon:  nodes[nro].querySelector("i").className,
-        ips:   nodes[nro].dataset.ip.split("-"),
-        broad: (nodes[nro].dataset.broad ? nodes[nro].dataset.broad.split("-") : [])
+        ips:   nodes[nro].dataset.ip.split(" "),
+        broad: (nodes[nro].dataset.broad ? nodes[nro].dataset.broad.split(" ") : [])
       }
 
       // Remove duplicates and self-broadcast
@@ -194,7 +194,7 @@ const TyrAnalizer = (function(window, undefined) {
                                   analizer.capture.traffic.map(function(packet, idx) {
                                     return "<td>" +
                                            [
-                                            idx + 1,
+                                            '<input type="radio" name="current-packet" id="packet-' + (idx + 1) + '" '+(idx === 0 ? 'checked' : '')+' data-idx="'+idx+'"><label for="packet-' + (idx + 1) + '">' + (idx + 1) + '</label><a href="#graph">Grafico</a>',
                                             TyrAnalizer.makeTemplate(packet, "protocol", analizer.topologyTable),
                                             TyrAnalizer.makeTemplate(packet, "source", analizer.topologyTable),
                                             TyrAnalizer.makeTemplate(packet, "target", analizer.topologyTable),
@@ -205,6 +205,73 @@ const TyrAnalizer = (function(window, undefined) {
                                   })
                                   .join("</tr><tr>") +
                                   "</tr></tbody>";
+
+    // Show current packet data:
+    function updateCurrentPacket() {
+      var current = analizer.history.querySelector("input[type='radio'][name='current-packet']:checked"),
+          packet = analizer.capture.traffic[current.dataset.idx],
+          sourceZone = analizer.graph.querySelector(".messages .source"),
+          targetZone = analizer.graph.querySelector(".messages .target"),
+          protocolZone = analizer.graph.querySelector(".messages .protocol"),
+          messageZone = analizer.graph.querySelector(".messages .message"),
+          elements;
+
+      elements = analizer.graph.querySelectorAll('.node.source');
+      for(nro=0; nro<elements.length; nro++) {
+        elements[nro].classList.remove("source");
+      }
+
+      elements = document.querySelectorAll('.node.target');
+      for(nro=0; nro<elements.length; nro++) {
+        elements[nro].classList.remove("target");
+      }
+
+      sourceZone.innerHTML = TyrAnalizer.makeTemplate(packet, "source", analizer.topologyTable);
+      targetZone.innerHTML = TyrAnalizer.makeTemplate(packet, "target", analizer.topologyTable);
+      protocolZone.innerHTML = TyrAnalizer.makeTemplate(packet, "protocol", analizer.topologyTable);
+      messageZone.innerHTML = TyrAnalizer.makeTemplate(packet, "message", analizer.topologyTable);
+
+      elements = analizer.graph.querySelectorAll("[data-ip*='" + analizer.topologyTable.indexMac[packet.sourceMac] + "']");
+      for(nro=0; nro<elements.length; nro++) {
+        elements[nro].classList.add("source");
+      }
+      
+      if (packet.targetMac === "ff:ff:ff:ff:ff:ff") {
+        elements = analizer.graph.querySelectorAll(".node[data-broad*='" + packet.sourceIp + "'], .network[data-broad*='" + packet.sourceIp + "'] .node");
+      } else {
+        elements = analizer.graph.querySelectorAll("[data-ip*='" + analizer.topologyTable.indexMac[packet.targetMac] + "']");
+      }
+      for(nro=0; nro<elements.length; nro++) {
+        elements[nro].classList.add("target");
+      }
+      
+      updateAutoplay();
+    }
+    
+    function updateAutoplay() {
+      var autoplay = analizer.history.querySelector("#autoplay").checked;
+      if (autoplay) {
+        setTimeout(function(){
+          var autoplay = analizer.history.querySelector("#autoplay").checked;
+          if (!autoplay) {
+            return;
+          }
+          
+          var current = analizer.history.querySelector("input[type='radio'][name='current-packet']:checked"),
+              currentRow = current.parentNode.parentNode;
+              
+          do {
+            currentRow = currentRow.nextElementSibling;
+          } while (currentRow.nextElementSibling && currentRow.nextElementSibling.classList.contains("hide"));
+          
+          if (currentRow !== current.parentNode.parentNode) {
+            currentRow.querySelector("input[type='radio'][name='current-packet']").checked = true;
+          }
+          
+          updateCurrentPacket();
+        }, 3000);
+      }
+    }
 
     // Filter history:
     function updateFilters() {
@@ -245,13 +312,13 @@ const TyrAnalizer = (function(window, undefined) {
                     if (!filter.nodes[iFace.id]) {
                       continue;
                     }
-                    
+
                     if (iFace.broad.map(function(ip) { return analizer.topologyTable.indexIp[ip]; }).indexOf(packet.sourceMac) !== -1) {
                       return true;
-                    }                  
+                    }
                   }
-                  
-                  return false;                  
+
+                  return false;
                 })()
               )
             )
@@ -275,7 +342,16 @@ const TyrAnalizer = (function(window, undefined) {
       filters[nro].addEventListener("change", updateFilters);
     }
 
+    // Add filter behavior to nodes graph:
+    var packets = analizer.history.querySelectorAll("input[type='radio']");
+    for (var nro=packets.length-1; nro>=0; nro--) {
+      packets[nro].addEventListener("change", updateCurrentPacket);
+    }
+
+    analizer.history.querySelector("#autoplay").addEventListener("change", updateAutoplay);
+    
     updateFilters();
+    updateCurrentPacket();
   }
 
   /*/ Parse individual packet. /*/
@@ -289,14 +365,14 @@ const TyrAnalizer = (function(window, undefined) {
     if (info.protocol.indexOf("http:data-text-lines") !== -1) {
       info.protocol = info.protocol.replace("http:data-text-lines", "http");
     }
-    
+
     if (info.protocol.indexOf("eth:ethertype") !== -1) {
       info.protocol = info.protocol.replace("eth:ethertype", "eth");
     }
 
     // Copy of protocol stack
     info.protocolsStack = info.protocol;
-    
+
     if (packet._source.layers.eth) {
       // It has Ethernet info
       info.sourceMac = packet._source.layers.eth["eth.src"];
@@ -322,7 +398,7 @@ const TyrAnalizer = (function(window, undefined) {
         ack: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.ack"] === "1",
         fin: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.fin"] === "1"
       };
-      
+
       info.overhead.tcp = 20; // Header length in bytes
     }
 
@@ -330,7 +406,7 @@ const TyrAnalizer = (function(window, undefined) {
       // It has UDP info
       info.sourcePort = packet._source.layers.udp["udp.srcport"];
       info.targetPort = packet._source.layers.udp["udp.dstport"];
-      
+
       info.overhead.udp = 16; // Header length in bytes
     }
 
@@ -485,7 +561,7 @@ const TyrAnalizer = (function(window, undefined) {
                           .replace(/'/g, '&apos;')  +
                         "\"></iframe>";
             } else {
-              console.log(packet)
+              console.warn("This packet of http module is not parsed: ", packet);
             }
             break;
           case "dns":
@@ -504,6 +580,9 @@ const TyrAnalizer = (function(window, undefined) {
               message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pregunta por:<br><strong><span>" + packet.query + "</span></strong>";
             }
             break;
+          default:
+            console.warn("This packet is not parsed: ", packet);
+            break;
         }
 
         var totalPercent = 0,
@@ -511,20 +590,20 @@ const TyrAnalizer = (function(window, undefined) {
             details = packet.protocolsStack.split(":").map(function(protocol) {
                         packet.overhead[protocol] || (packet.overhead[protocol] = 0);
                         packet.overhead[protocol] = Number(packet.overhead[protocol]);
-                        
+
                         var percent = Math.round(packet.overhead[protocol] / packet.size * 10) / 10;
                         totalPercent += percent;
                         totalSize += packet.overhead[protocol];
-                        
+
                         return "<span class=\"" + protocol + "\">" + protocol + "<br><span>" + packet.overhead[protocol] + "B<br>(" + percent + "%)</span></span>";
                       })
                       .join("");
-        
+
         message +=  "<div class=\"overhead\">" +
                       "<strong>Overhead de "+totalSize+"B ("+totalPercent+"%) en paquete de " + packet.size + "B:</strong>" +
                       "<div>" + details + "</div>" +
                     "</div>";
-        
+
         return message;
         break;
       default:

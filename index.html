@@ -18,7 +18,7 @@
 				<div class="network delimited">
 					<h2>HOSTING</h2>
 					<div class="network">
-						<div class="network" data-broad="200.28.0.89-200.28.0.90-200.28.0.100">
+						<div class="network" data-broad="200.28.0.89 200.28.0.90 200.28.0.100">
 							<div class="network right">
 								<span class="mask">200.28.0.0 / 16</span>
 								<div class="node right" data-ip="200.28.0.89">
@@ -35,7 +35,7 @@
 								</div>
 							</div>
 							<div class="network">
-								<div class="node both" data-ip="200.28.0.100-147.12.3.1" data-broad="147.12.3.2-147.12.3.3">
+								<div class="node both" data-ip="200.28.0.100 147.12.3.1" data-broad="147.12.3.2 147.12.3.3">
                   <input type="checkbox" id="router-a" checked><label for="router-a"></label>
 									<i class="icon router"></i>
 									<label><strong>Router A</strong></label>
@@ -53,8 +53,8 @@
               <i class="icon cloud"></i>
               <label><strong>147.12.3.0 / 30</strong></label>
             </div>
-            <div class="network delimited" data-broad="200.18.10.1-200.18.10.2">
-              <div class="node bottom top" data-ip="200.18.10.2-147.12.3.3" data-broad="147.12.3.1-147.12.3.2">
+            <div class="network delimited" data-broad="200.18.10.1 200.18.10.2">
+              <div class="node bottom top" data-ip="200.18.10.2 147.12.3.3" data-broad="147.12.3.1 147.12.3.2">
                 <input type="checkbox" id="router-b" checked><label for="router-b"></label>
                 <i class="icon router"></i>
                 <label><strong>Router B</strong></label>
@@ -73,8 +73,8 @@
 				<div class="network delimited">
 					<h2>Organizacion X</h2>
 					<div class="network">
-						<div class="network" data-broad="192.168.1.100-192.168.1.66">
-							<div class="node both bottom" data-ip="192.168.1.66-10.10.10.100-147.12.3.2" data-broad="147.12.3.1-147.12.3.3-10.10.10.1-10.10.10.2">
+						<div class="network" data-broad="192.168.1.100 192.168.1.66">
+							<div class="node both bottom" data-ip="192.168.1.66 10.10.10.100 147.12.3.2" data-broad="147.12.3.1 147.12.3.3 10.10.10.1 10.10.10.2">
                 <input type="checkbox" id="router-c" checked><label for="router-c"></label>
 								<i class="icon router"></i>
 								<label><strong>Router C</strong></label>
@@ -89,7 +89,7 @@
 								<span class="host top">.100</span>
 							</div>
 						</div>
-						<div class="network left" data-broad="10.10.10.1-10.10.10.2-10.10.10.100">
+						<div class="network left" data-broad="10.10.10.1 10.10.10.2 10.10.10.100">
 							<span class="mask">10.10.10.0 / 24</span>
 							<div class="node left" data-ip="10.10.10.1">
                 <input type="checkbox" id="user-1" checked><label for="user-1"></label>
@@ -107,12 +107,11 @@
 					</div>
 				</div>
 			</div>
-			<div class="messages source" id="messages-source">
-				<div class="msource"></div>
-				<div class="info"><span class="minfo"></span><span class="mexplanation"></span></div>
-			</div><div class="messages target" id="messages-target">
-				<div class="mdestination"></div>
-				<div class="info"><span class="minfo"></span><span class="mexplanation"></span></div>
+			<div class="messages">
+				<div class="source"></div>
+				<div class="target"></div>
+				<div class="protocol"></div>
+				<div class="message"></div>
 			</div>
 		</div>
 		<table class="protocols" id="protocols"></table>
