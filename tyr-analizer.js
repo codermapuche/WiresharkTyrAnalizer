@@ -66,7 +66,7 @@ const TyrAnalizer = (function(window, undefined) {
     const analizer = this;
 
     // Init table history with headers.
-    analizer.history.innerHTML = '<thead><tr><th><input type="checkbox" id="autoplay" checked><label for="autoplay">#</label></th><th>Protocolo</th><th>Origen</th><th>Destino</th><th>Mensaje</th></tr></thead>';
+    analizer.history.innerHTML = '<thead><tr><th>#</th><th>Protocolo</th><th>Origen</th><th>Destino</th><th>Mensaje</th></tr></thead>';
     analizer.protocols.innerHTML = "<thead>" +
                                       "<tr>" +
                                         "<th>Capa 1<br><strong>Fisica</strong></th>" +
@@ -195,10 +195,10 @@ const TyrAnalizer = (function(window, undefined) {
                                     return "<td>" +
                                            [
                                             '<input type="radio" name="current-packet" id="packet-' + (idx + 1) + '" '+(idx === 0 ? 'checked' : '')+' data-idx="'+idx+'"><label for="packet-' + (idx + 1) + '">' + (idx + 1) + '</label><a href="#graph">Grafico</a>',
-                                            TyrAnalizer.makeTemplate(packet, "protocol", analizer.topologyTable),
-                                            TyrAnalizer.makeTemplate(packet, "source", analizer.topologyTable),
-                                            TyrAnalizer.makeTemplate(packet, "target", analizer.topologyTable),
-                                            TyrAnalizer.makeTemplate(packet, "message", analizer.topologyTable),
+                                            TyrAnalizer.makeTemplate(packet, "protocol", analizer.topologyTable, analizer.capture.traffic),
+                                            TyrAnalizer.makeTemplate(packet, "source", analizer.topologyTable, analizer.capture.traffic),
+                                            TyrAnalizer.makeTemplate(packet, "target", analizer.topologyTable, analizer.capture.traffic),
+                                            TyrAnalizer.makeTemplate(packet, "message", analizer.topologyTable, analizer.capture.traffic),
                                            ]
                                            .join("</td><td>") +
                                            "</td>";
@@ -226,16 +226,16 @@ const TyrAnalizer = (function(window, undefined) {
         elements[nro].classList.remove("target");
       }
 
-      sourceZone.innerHTML = TyrAnalizer.makeTemplate(packet, "source", analizer.topologyTable);
-      targetZone.innerHTML = TyrAnalizer.makeTemplate(packet, "target", analizer.topologyTable);
-      protocolZone.innerHTML = TyrAnalizer.makeTemplate(packet, "protocol", analizer.topologyTable);
-      messageZone.innerHTML = TyrAnalizer.makeTemplate(packet, "message", analizer.topologyTable);
+      sourceZone.innerHTML = TyrAnalizer.makeTemplate(packet, "source", analizer.topologyTable, analizer.capture.traffic);
+      targetZone.innerHTML = TyrAnalizer.makeTemplate(packet, "target", analizer.topologyTable, analizer.capture.traffic);
+      protocolZone.innerHTML = TyrAnalizer.makeTemplate(packet, "protocol", analizer.topologyTable, analizer.capture.traffic);
+      messageZone.innerHTML = TyrAnalizer.makeTemplate(packet, "message", analizer.topologyTable, analizer.capture.traffic);
 
       elements = analizer.graph.querySelectorAll("[data-ip*='" + analizer.topologyTable.indexMac[packet.sourceMac] + "']");
       for(nro=0; nro<elements.length; nro++) {
         elements[nro].classList.add("source");
       }
-      
+
       if (packet.targetMac === "ff:ff:ff:ff:ff:ff") {
         elements = analizer.graph.querySelectorAll(".node[data-broad*='" + packet.sourceIp + "'], .network[data-broad*='" + packet.sourceIp + "'] .node");
       } else {
@@ -244,30 +244,30 @@ const TyrAnalizer = (function(window, undefined) {
       for(nro=0; nro<elements.length; nro++) {
         elements[nro].classList.add("target");
       }
-      
+
       updateAutoplay();
     }
-    
+
     function updateAutoplay() {
-      var autoplay = analizer.history.querySelector("#autoplay").checked;
+      var autoplay = analizer.graph.querySelector("#autoplay").checked;
       if (autoplay) {
         setTimeout(function(){
-          var autoplay = analizer.history.querySelector("#autoplay").checked;
+          var autoplay = analizer.graph.querySelector("#autoplay").checked;
           if (!autoplay) {
             return;
           }
-          
+
           var current = analizer.history.querySelector("input[type='radio'][name='current-packet']:checked"),
               currentRow = current.parentNode.parentNode;
-              
+
           do {
             currentRow = currentRow.nextElementSibling;
           } while (currentRow.nextElementSibling && currentRow.nextElementSibling.classList.contains("hide"));
-          
+
           if (currentRow !== current.parentNode.parentNode) {
             currentRow.querySelector("input[type='radio'][name='current-packet']").checked = true;
           }
-          
+
           updateCurrentPacket();
         }, 3000);
       }
@@ -348,22 +348,30 @@ const TyrAnalizer = (function(window, undefined) {
       packets[nro].addEventListener("change", updateCurrentPacket);
     }
 
-    analizer.history.querySelector("#autoplay").addEventListener("change", updateAutoplay);
-    
+    analizer.graph.querySelector("#autoplay").addEventListener("change", updateAutoplay);
+
     updateFilters();
     updateCurrentPacket();
   }
 
   /*/ Parse individual packet. /*/
   TyrAnalizer.parsePacket = function parsePacket(packet) {
-    var info = {};
+    var info = {},
+        size = 0;
+
     info.protocol = packet._source.layers.frame["frame.protocols"];
-    info.size = packet._source.layers.frame["frame.len"];
+    info.size = Number(packet._source.layers.frame["frame.len"]);
+    info.dataSize = 0;
+    size = info.size;
     info.overhead = {};
 
     // Protocol alias
     if (info.protocol.indexOf("http:data-text-lines") !== -1) {
       info.protocol = info.protocol.replace("http:data-text-lines", "http");
+    }
+
+    if (info.protocol.indexOf("http:data") !== -1) {
+      info.protocol = info.protocol.replace("http:data", "http");
     }
 
     if (info.protocol.indexOf("eth:ethertype") !== -1) {
@@ -377,37 +385,9 @@ const TyrAnalizer = (function(window, undefined) {
       // It has Ethernet info
       info.sourceMac = packet._source.layers.eth["eth.src"];
       info.targetMac = packet._source.layers.eth["eth.dst"];
-      info.overhead.eth = 14; // Header length in bytes
-    }
-
-    if (packet._source.layers.ip) {
-      // It has IP info
-      info.sourceIp = packet._source.layers.ip["ip.src"];
-      info.targetIp = packet._source.layers.ip["ip.dst"];
-      info.overhead.ip = 20; // Header length in bytes
-    }
-
-    if (packet._source.layers.tcp) {
-      // It has TCP info
-      info.sourcePort = packet._source.layers.tcp["tcp.srcport"];
-      info.targetPort = packet._source.layers.tcp["tcp.dstport"];
-
-      info.ack = packet._source.layers.tcp["tcp.ack"];
-      info.flags = {
-        syn: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.syn"] === "1",
-        ack: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.ack"] === "1",
-        fin: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.fin"] === "1"
-      };
-
-      info.overhead.tcp = 20; // Header length in bytes
-    }
-
-    if (packet._source.layers.udp) {
-      // It has UDP info
-      info.sourcePort = packet._source.layers.udp["udp.srcport"];
-      info.targetPort = packet._source.layers.udp["udp.dstport"];
-
-      info.overhead.udp = 16; // Header length in bytes
+      // Header length in bytes
+      info.overhead.eth = 14 + (packet._source.layers.eth["eth.padding"] ? packet._source.layers.eth["eth.padding"].split(":").length : 0);
+      size -= info.overhead.eth;
     }
 
     if (packet._source.layers.arp) {
@@ -423,18 +403,79 @@ const TyrAnalizer = (function(window, undefined) {
       info.targetIp = packet._source.layers.arp["arp.dst.proto_ipv4"];
 
       info.opcode = packet._source.layers.arp["arp.opcode"];
+      info.overhead.arp = 28; // Header length in bytes
+      size -= info.overhead.arp;
+    }
+
+    if (packet._source.layers.ip) {
+      // It has IP info
+      info.sourceIp = packet._source.layers.ip["ip.src"];
+      info.targetIp = packet._source.layers.ip["ip.dst"];
+      info.overhead.ip = Number(packet._source.layers.ip["ip.hdr_len"]); // Header length in bytes
+      size -= info.overhead.ip;
+    }
+
+    if (packet._source.layers.tcp) {
+      // It has TCP info
+      info.sourcePort = packet._source.layers.tcp["tcp.srcport"];
+      info.targetPort = packet._source.layers.tcp["tcp.dstport"];
+
+      info.ack = Number(packet._source.layers.tcp["tcp.ack"]);
+      info.seq = Number(packet._source.layers.tcp["tcp.seq"]);
+      info.flags = {
+        syn: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.syn"] === "1",
+        ack: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.ack"] === "1",
+        fin: packet._source.layers.tcp["tcp.flags_tree"]["tcp.flags.fin"] === "1"
+      };
+
+      info.overhead.tcp = Number(packet._source.layers.tcp["tcp.hdr_len"]); // Header length in bytes
+      size -= info.overhead.tcp;
+    }
+
+    if (packet._source.layers.udp) {
+      // It has UDP info
+      info.sourcePort = packet._source.layers.udp["udp.srcport"];
+      info.targetPort = packet._source.layers.udp["udp.dstport"];
+
+      info.overhead.udp = 8; // Header length in bytes
+      size -= info.overhead.udp;
     }
 
     if (packet._source.layers.http) {
+      function byteLength(str) {
+        // returns the byte length of an utf8 string
+        var s = str.length;
+        for (var i=str.length-1; i>=0; i--) {
+          var code = str.charCodeAt(i);
+          if (code > 0x7f && code <= 0x7ff) s++;
+          else if (code > 0x7ff && code <= 0xffff) s+=2;
+          if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+        }
+        return s;
+      }
+
       // It has HTTP info
       info.message = Object.keys(packet._source.layers.http)[0];
-      if (info.message.indexOf("GET ") === 0) {
+      if (info.message.indexOf("GET ") === 0 || info.message.indexOf("CONNECT ") === 0) {
         info.url = info.message.split(" ")[1];
+        info.dataSize = byteLength(info.message);
       } else if (info.message.indexOf("HTTP") === 0) {
         if (info.message.split(" ")[1] === "200") {
           info.data = packet._source.layers.http["http.file_data"];
+          if (info.data) {
+            info.dataSize = packet._source.layers.http["http.content_length_header"];
+          }
         }
+      } else if (packet._source.layers.data) {
+        info.message = "DATA CHUNK";
+        info.data = packet._source.layers.data["data.data"];
+        info.dataSize = packet._source.layers.data["data.len"];
+      } else if (!packet._source.layers.ssl) {
+        console.warn("HTTP packet not parsed: ", packet);
       }
+
+      info.overhead.http = size - info.dataSize; // Header length in bytes
+      size -= info.overhead.http;
     }
 
     if (packet._source.layers.dns) {
@@ -455,6 +496,8 @@ const TyrAnalizer = (function(window, undefined) {
         info.aRecords = Object.keys(packet._source.layers.dns["Additional records"])[0];
       }
 
+      info.overhead.dns = size; // DNS is all overhead
+      size -= info.overhead.dns;
     }
 
     return info;
@@ -498,7 +541,7 @@ const TyrAnalizer = (function(window, undefined) {
   }
 
   /*/ Make template of property. /*/
-  TyrAnalizer.makeTemplate = function makeTemplate(packet, field, topology) {
+  TyrAnalizer.makeTemplate = function makeTemplate(packet, field, topology, traffic) {
     switch (field) {
       case "source":
         var name = "<i class=\"" + topology.interfaces[packet.sourceMac].icon + "\"></i>" +
@@ -536,22 +579,178 @@ const TyrAnalizer = (function(window, undefined) {
             }
             break;
           case "tcp":
+            // Esto es una conexion y todo puede pasar:
             if (packet.flags.syn) {
-              if (packet.flags.ack) {
-                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> contesta:<br>Dale, ¿y abrimos esta tambien? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
-              } else {
-                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pregunta:<br>¿Abrimos esta conexion? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+              // Desde que un nodo quiera abrir una conexion pasando por otro:
+              if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+
+                if (packet.flags.ack) {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> acepta la conexion<br>y quiere conectase con <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Acepto su conexion, ¿Abrimos esta tambien? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                } else {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> quiere<br>conectase con <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>¿Abrimos esta conexion? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+
               }
-            } else if (packet.flags.ack) {
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> contesta:<br>Si dale.";
+              // Pasando porque un router quiera abrir la conexion contra un nodo en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+
+                if (packet.flags.ack) {
+                  message = "El <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em> acepta la conexion<br>y quiere conectase con <em>" + topology.interfaces[packet.targetMac].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.sourceMac].name  + "</em>:<br>Acepto su conexion, ¿Abrimos esta tambien? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                } else {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> quiere<br>conectar a <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br>con <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>¿Abrimos esta conexion? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+
+              }
+              // O que router quiera abrir la conexion contra otro router en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+                if (packet.flags.ack) {
+                  message = "TO-DO: ";
+                } else {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> quiere<br>conectar a <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br>con <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>¿Abrimos esta conexion? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+              } else if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+                if (packet.flags.ack) {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> acepta la conexion<br>y quiere conectase con <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Acepto su conexion, ¿Abrimos esta tambien? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                } else {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> quiere<br>conectarse con <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em>:<br>¿Abrimos esta conexion? <strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+              } else {
+                console.warn("Syn type not parsed in:", packet);
+              }
+            }
+            // O que se trate de una confirmacion.
+            else if (packet.flags.ack) {
+              var ackOfConnections = traffic
+                                      .filter(function(tPacket) {
+                                        return ((tPacket.protocol.lastIndexOf(":") !== -1 ?
+                                                  tPacket.protocol.substr(tPacket.protocol.lastIndexOf(":") + 1) :
+                                                  tPacket.protocol) === "tcp" &&
+                                                  tPacket.flags.syn
+                                                );
+                                      })
+                                      .map(function(tPacket) {
+                                        return tPacket.seq + 1;
+                                      });
+
+              // Donde un nodo quiere confirmar datos pasando por otro:
+              if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+                  // El ack es de una apertura de conexion:
+                  if (ackOfConnections.indexOf(packet.ack) !== -1) {
+                    message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> acepta la conexion<br>de <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Acepto su conexion.<strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                  }
+                  // El ack es de otra cosa:
+                  else {
+                    message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> confirma la recepcion #"+packet.ack+"<br> a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Confirmo con ACK #"+packet.ack+".<strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                  }
+              }
+              // Pasando porque un router quiera confirmar datos un nodo en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+                // El ack es de una apertura de conexion:
+                if (ackOfConnections.indexOf(packet.ack) !== -1) {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> acepta la conexion<br>de <em>" + topology.interfaces[packet.targetMac].name + "</em><br>en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em>:<br>Acepto su conexion.<strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+                // El ack es de otra cosa:
+                else {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> confirma la recepcion #"+packet.ack+"<br>a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em>:<br>Confirmo con ACK #"+packet.ack+".<strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+              }
+              // O que router confirme contenido a otro router en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+                if (packet.flags.ack) {
+                  message = "TO-DO: ";
+                } else {
+                  message = "TO-DO: ";
+                }
+              } else if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+                // El ack es de una apertura de conexion:
+                if (ackOfConnections.indexOf(packet.ack) !== -1) {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> acepta la conexion<br>de <em>" + topology.interfaces[packet.targetMac].name + "</em>:<br>Acepto su conexion.<strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+                // El ack es de otra cosa:
+                else {
+                  message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> confirma la recepcion #"+packet.ack+"<br>a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em>:<br>Confirmo con ACK #"+packet.ack+".<strong>" + packet.sourceIp + "<span>" + packet.sourcePort + "</span> → " + packet.targetIp + "<span>" + packet.targetPort + "</span></strong>";
+                }
+              } else {
+                console.warn("Ack type not parsed in:", packet);
+              }
+            } else {
+              console.warn("TCP type not parsed in:", packet);
             }
             break;
           case "http":
+            // Es una peticion http y todo puede pasar:
             if (packet.message.indexOf("GET ") === 0) {
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pide el recurso:<br><strong><span>" + packet.url + "</span></strong>";
+              // Desde que un nodo pida un recurso pasando por otro:
+              if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pide un recurso<br>a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br><strong>GET <span>" + packet.url + "</span></strong>";
+
+              }
+              // Pasando porque un router pida un recurso en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pide un recurso<br>en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br>a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br><strong>GET <span>" + packet.url + "</span></strong>";
+
+              } else {
+                console.warn("HTTP GET not parsed in:", packet);
+              }
             } else if (packet.data) {
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia el recurso:<br>" +
-                        "<iframe sandbox srcdoc=\"" +
+              // Desde que un nodo envie un recurso pasando por otro:
+              if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia el recurso<br>a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em> pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:";
+
+              }
+              // Pasando porque un router envie un recurso a otro router en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia el recurso<br>a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em> en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:";
+
+              }
+              // O que un router envie un recurso en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia el recurso<br>a <em>" + topology.interfaces[packet.targetMac].name  + "</em> en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em>:";
+
+              }
+              // O que un nodo envie un recurso a otro nodo:
+              else if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia el recurso<br>a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:";
+
+              } else {
+                console.warn("HTTP data not parsed:", packet);
+              }
+
+              message += "<br><iframe sandbox srcdoc=\"" +
                         packet.data
                           .replace(/img src\=\"/gi, 'img data-src="')
                           .replace(/&/g, '&amp;')
@@ -560,6 +759,12 @@ const TyrAnalizer = (function(window, undefined) {
                           .replace(/"/g, '&quot;')
                           .replace(/'/g, '&apos;')  +
                         "\"></iframe>";
+            } else if (packet.message.indexOf("CONNECT ") === 0) {
+              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> quiere iniciar una conexion HTTP<br> con <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em>:<br><strong><span>" + packet.message + "</span></strong>";
+            }  else if (packet.message.indexOf("200 Connection established") !== -1) {
+              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> acepta una conexion HTTP<br> con <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em>:<br><strong><span>" + packet.message + "</span></strong>";
+            }  else if (packet.message === "DATA TUNNEL") {
+              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> envia datos<br> a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em>:<br><strong><span>" + packet.message + "</span></strong>";
             } else {
               console.warn("This packet of http module is not parsed: ", packet);
             }
@@ -591,14 +796,14 @@ const TyrAnalizer = (function(window, undefined) {
                         packet.overhead[protocol] || (packet.overhead[protocol] = 0);
                         packet.overhead[protocol] = Number(packet.overhead[protocol]);
 
-                        var percent = Math.round(packet.overhead[protocol] / packet.size * 10) / 10;
-                        totalPercent += percent;
+                        var percent = Math.round(packet.overhead[protocol] / packet.size * 10000) / 100;
                         totalSize += packet.overhead[protocol];
 
                         return "<span class=\"" + protocol + "\">" + protocol + "<br><span>" + packet.overhead[protocol] + "B<br>(" + percent + "%)</span></span>";
                       })
                       .join("");
 
+        totalPercent = Math.round(totalSize / packet.size * 10000) / 100;
         message +=  "<div class=\"overhead\">" +
                       "<strong>Overhead de "+totalSize+"B ("+totalPercent+"%) en paquete de " + packet.size + "B:</strong>" +
                       "<div>" + details + "</div>" +

@@ -305,9 +305,8 @@ table td strong {
 .messages .message strong,
 table td strong {
   background-color: #fafafa;
-  margin: 0 .5em;
   padding: 1em;
-  min-width: calc(100% - 4em);
+  min-width: 100%;
   display: inline-block;
 }
 .messages .message strong {
@@ -371,12 +370,22 @@ table td i {
 	display: flex;
 	min-width: calc(50% - 2em);
 	padding: 1em;
+	position: relative;
 	flex-direction: row;
 	align-items: center;
 	flex: 1;
 	flex-wrap: wrap;
 	height: 10em;
 } 
+.messages .source::after {
+	content: "→";
+	position: absolute;
+	right: -.5em;
+	top: 1em;
+	z-index: 99;
+	font-family: arial;
+	font-size: 2em;
+}
 .messages strong,
 .messages .source em,
 .messages .target em {
@@ -418,12 +427,12 @@ table td i {
   margin-top: 1em;
   padding-top: 1em;
 }
-input[type="radio"],
-input[type="checkbox"]{
+input[type="radio"]:not(#autoplay),
+input[type="checkbox"]:not(#autoplay) {
   position: absolute;
   opacity: 0;
 }
-input[type="radio"] + label + a {
+input[type="radio"]:not(#autoplay) + label + a {
   visibility: hidden;
   font-size: 11px;
   text-decoration: none;
@@ -431,11 +440,11 @@ input[type="radio"] + label + a {
   margin-top: 1em;
   color: #34495e;
 }
-input[type="radio"]:checked + label + a {
+input[type="radio"]:not(#autoplay):checked + label + a {
  visibility: visible;
 }
-input[type="radio"] + label,
-input[type="checkbox"] + label {
+input[type="radio"]:not(#autoplay) + label,
+input[type="checkbox"]:not(#autoplay) + label {
   position: relative;
   cursor: pointer;
   padding: 0;
@@ -446,8 +455,63 @@ input[type="checkbox"] + label {
   padding-left: 22px;
   text-align: center;
 }
-input[type="radio"] + label:before,
-input[type="checkbox"] + label:before {
+#autoplay + label {
+  position: absolute;
+  bottom: 35px;
+  width: 0;
+  height: 0;
+  border-top: 25px solid transparent;
+  border-bottom: 25px solid transparent;
+  border-left: 30px solid #2c3e50;
+  z-index: 1;
+  transition: all 0.3s;
+  left: 65px;
+  cursor: pointer;
+}
+#autoplay + label:before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  left: -70px;
+  bottom: -50px;
+  right: -30px;
+  border-radius: 50%;
+  border: 10px solid #2c3e50;
+  z-index: 2;
+  transition: all 0.3s;
+  -webkit-transition: all 0.3s;
+  -moz-transition: all 0.3s;
+}
+#autoplay + label:after {
+  content: '';
+  opacity: 0;
+  transition: opacity 0.6s;
+  -webkit-transition: opacity 0.6s;
+  -moz-transition: opacity 0.6s;
+}
+#autoplay + label:hover:before, 
+#autoplay + label:focus:before {
+  transform: scale(1.1);
+  -webkit-transform: scale(1.1);
+  -moz-transform: scale(1.1);
+}
+#autoplay:checked + label {
+  border-color: transparent;
+}
+#autoplay:checked + label:after {
+  content: '';
+  opacity: 1;
+  width: 25px;
+  height: 40px;
+  background: #2c3e50;
+  position: absolute;
+  right: 0;
+  top: -20px;
+  border-left: 15px solid #2c3e50;
+  box-shadow: inset 10px 0 0 0 #f9f9f9;
+}
+input[type="radio"]:not(#autoplay) + label:before,
+input[type="checkbox"]:not(#autoplay) + label:before {
   content: '';
   line-height: 22px;
   font-size: 22px;
@@ -462,11 +526,11 @@ input[type="checkbox"] + label:before {
   top: 0;
   left: 0;
 }
-input[type="radio"] + label:before {
+input[type="radio"]:not(#autoplay) + label:before {
   border-radius: 50%;
 }
-input[type="radio"] + label:after,
-input[type="checkbox"] + label:after {
+input[type="radio"]:not(#autoplay) + label:after,
+input[type="checkbox"]:not(#autoplay) + label:after {
   content: '';
   position: absolute;
   left: 7px;
@@ -477,12 +541,12 @@ input[type="checkbox"] + label:after {
   border-right: 2px solid #34495e;
   transform: rotate(45deg);
 }
-input[type="radio"]:checked + label:after,
-input[type="checkbox"]:checked + label:after {
+input[type="radio"]:not(#autoplay):checked + label:after,
+input[type="checkbox"]:not(#autoplay):checked + label:after {
   border-color: #fff;
 }
-input[type="radio"]:checked + label:before,
-input[type="checkbox"]:checked + label:before {
+input[type="radio"]:not(#autoplay):checked + label:before,
+input[type="checkbox"]:not(#autoplay):checked + label:before {
   background-color: #34495e;	
   color: #eee;
 }
