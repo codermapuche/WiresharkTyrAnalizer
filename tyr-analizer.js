@@ -771,18 +771,68 @@ const TyrAnalizer = (function(window, undefined) {
             break;
           case "dns":
             if (packet.answer || packet.aNameservers || packet.aRecords) {
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> contesta a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:";
+              var response = '';
               if (packet.answer) {
-                message += "<br>La respuesta es:<br><strong><span>" + packet.answer + "</span></strong>";
+                response += "<br>La respuesta es:<br><strong><span>" + packet.answer + "</span></strong>";
               }
               if (packet.aNameservers) {
-                message += "<br>Los servidores de nombres con autoridad:<br><strong><span>" + packet.aNameservers + "</span></strong>";
+                response += "<br>Los servidores de nombres con autoridad:<br><strong><span>" + packet.aNameservers + "</span></strong>";
               }
               if (packet.aRecords) {
-                message += "<br>Los registros adicionales:<br><strong><span>" + packet.aRecords + "</span></strong>";
+                response += "<br>Los registros adicionales:<br><strong><span>" + packet.aRecords + "</span></strong>";
+              }
+              
+              // Desde que un nodo responde pasando por otro:
+              if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>responde a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:" + response;
+
+              }
+              // Pasando porque un router responde a un nodo en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {                
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>responde en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br> a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:" + response;
+              }
+              // O que router quiera preguntar a otro router en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>responde en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br>a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:" + response;
+                  
+              } else if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>responde a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:" + response;
               }
             } else {
-              message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em> pregunta por:<br><strong><span>" + packet.query + "</span></strong>";
+              // Desde que un nodo pregunta pasando por otro:
+              if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>pregunta a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Consulta DNS: <strong><span>" + packet.query + "</span></strong>";
+
+              }
+              // Pasando porque un router pregunta a un nodo en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {                
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>pregunta en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br> a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Consulta DNS: <strong><span>" + packet.query + "</span></strong>";
+              }
+              // O que router quiera preguntar a otro router en nombre de otro nodo:
+              else if (topology.indexIp[packet.sourceIp] !== packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] !== packet.targetMac
+              ) {
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>pregunta en nombre de <em>" + topology.interfaces[topology.indexIp[packet.sourceIp]].name  + "</em><br>a <em>" + topology.interfaces[topology.indexIp[packet.targetIp]].name  + "</em><br>pasando por <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Consulta DNS: <strong><span>" + packet.query + "</span></strong>";
+                  
+              } else if (topology.indexIp[packet.sourceIp] === packet.sourceMac &&
+                  topology.indexIp[packet.targetIp] === packet.targetMac
+              ) {
+                message = "El <em>" + topology.interfaces[packet.sourceMac].name  + "</em><br>pregunta a <em>" + topology.interfaces[packet.targetMac].name  + "</em>:<br>Consulta DNS: <strong><span>" + packet.query + "</span></strong>";
+              }
             }
             break;
           default:
